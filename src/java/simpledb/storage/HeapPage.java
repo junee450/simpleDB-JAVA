@@ -73,7 +73,9 @@ public class HeapPage implements Page {
     */
     private int getNumTuples() {        
         // some code goes here
-        return 0;
+        // 一个HeapPage能储存的Tuple数量等于每页的大小*8（转比特）除以TupleDesc描述的一个tuple的大小*8（转比特）再加一（每个tuple要在bitmap中占一位表征自己是否存在/（删除或未初始化））
+        // floor向下取整表示我们不希望在一页储存不完整的tuple
+        return (int)Math.floor(BufferPool.getPageSize()*8*1.0)/(td.getSize()*8+1);
 
     }
 
@@ -84,7 +86,7 @@ public class HeapPage implements Page {
     private int getHeaderSize() {        
         
         // some code goes here
-        return 0;
+        return (int)Math.ceil(getNumTuples()*1.0/8);
                  
     }
     
@@ -118,7 +120,7 @@ public class HeapPage implements Page {
      */
     public HeapPageId getId() {
     // some code goes here
-    throw new UnsupportedOperationException("implement this");
+        return pid;
     }
 
     /**
@@ -288,7 +290,13 @@ public class HeapPage implements Page {
      */
     public int getNumEmptySlots() {
         // some code goes here
-        return 0;
+        int cnt = 0;
+        for (int i = 0;i<numSlots;i++){
+            if(!isSlotUsed(i)){
+                cnt++;
+            }
+        }
+        return cnt;
     }
 
     /**
@@ -296,7 +304,12 @@ public class HeapPage implements Page {
      */
     public boolean isSlotUsed(int i) {
         // some code goes here
-        return false;
+        int quot = i/8;
+        int remainder = i%8;
+
+        int bitidx = header[quot];
+        int bit = (bitidx>>remainder) & 1;
+        return bit == 1;
     }
 
     /**
@@ -313,7 +326,13 @@ public class HeapPage implements Page {
      */
     public Iterator<Tuple> iterator() {
         // some code goes here
-        return null;
+        ArrayList<Tuple> filledTuples = new ArrayList<Tuple>();
+        for(int i=0;i<numSlots;++i){
+            if(isSlotUsed(i)){
+                filledTuples.add(tuples[i]);
+            }
+        }
+        return filledTuples.iterator();
     }
 
 }
