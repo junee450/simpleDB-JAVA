@@ -27,7 +27,6 @@ public class Catalog {
 
     public static class Table implements Serializable{
 
-        @Serial
         private final static long serialVersionUID = 1L;
 
         private final DbFile dbFile;
@@ -55,7 +54,7 @@ public class Catalog {
         }
     }
 
-    private ConcurrentHashMap<Integer, Table> map;
+    private final ConcurrentHashMap<Integer, Table> map;
 
     public Catalog() {
         // some code goes here
@@ -73,8 +72,14 @@ public class Catalog {
      */
     public void addTable(DbFile file, String name, String pkeyField) {
         // some code goes here
-        Table table = new Table(file,name,pkeyField);
         int id = file.getId();
+        for(Map.Entry<Integer,Table> entry : map.entrySet()){
+            Table table = entry.getValue();
+            if(table.getName().equals(name)){
+                id = table.getDbFile().getId();
+            }
+        }
+        Table table = new Table(file,name,pkeyField);
         map.put(id,table);
     }
 
